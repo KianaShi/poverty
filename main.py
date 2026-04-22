@@ -433,11 +433,3 @@ with st.expander("Show Sample Data"):
         "Professional", "Service", "Office", "Construction", "Production",
         "Unemployment"
     ]].head(20))
-
-# Insights
-st.subheader("Key Insights")
-st.write(
-    "This dashboard suggests that poverty is not evenly distributed across counties. "
-    "Income tends to be negatively associated with poverty, while occupational composition "
-    "shows potentially meaningful structural relationships with county-level economic outcomes."
-)
