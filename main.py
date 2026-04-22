@@ -321,10 +321,6 @@ st.caption("The share of this occupational group may be associated with differen
 
 st.markdown("---")
 
-
-
-st.markdown("---")
-
 # ===== Section 1: Poverty Distribution =====
 st.subheader(f"Poverty Distribution ({year})")
 
@@ -428,6 +424,7 @@ with right2:
 
 st.caption("This chart highlights counties with the highest child poverty rates.")
 
+st.markdown("---")
 
 # 可展开数据表
 with st.expander("Show Sample Data"):
