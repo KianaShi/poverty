@@ -73,6 +73,180 @@ with k3:
 
 st.markdown("---")
 
+state_abbrev = {
+    "Alabama": "AL", "Alaska": "AK", "Arizona": "AZ", "Arkansas": "AR",
+    "California": "CA", "Colorado": "CO", "Connecticut": "CT", "Delaware": "DE",
+    "Florida": "FL", "Georgia": "GA", "Hawaii": "HI", "Idaho": "ID",
+    "Illinois": "IL", "Indiana": "IN", "Iowa": "IA", "Kansas": "KS",
+    "Kentucky": "KY", "Louisiana": "LA", "Maine": "ME", "Maryland": "MD",
+    "Massachusetts": "MA", "Michigan": "MI", "Minnesota": "MN", "Mississippi": "MS",
+    "Missouri": "MO", "Montana": "MT", "Nebraska": "NE", "Nevada": "NV",
+    "New Hampshire": "NH", "New Jersey": "NJ", "New Mexico": "NM", "New York": "NY",
+    "North Carolina": "NC", "North Dakota": "ND", "Ohio": "OH", "Oklahoma": "OK",
+    "Oregon": "OR", "Pennsylvania": "PA", "Rhode Island": "RI", "South Carolina": "SC",
+    "South Dakota": "SD", "Tennessee": "TN", "Texas": "TX", "Utah": "UT",
+    "Vermont": "VT", "Virginia": "VA", "Washington": "WA", "West Virginia": "WV",
+    "Wisconsin": "WI", "Wyoming": "WY", "District of Columbia": "DC"
+}
+
+
+# ===== State-Level Map =====
+st.subheader(f"State-Level Poverty and Dominant Occupation ({year})")
+
+occupation_cols = ["Professional", "Service", "Office", "Construction", "Production"]
+
+# 州级聚合
+state_summary = (
+    filtered_df.groupby("State", as_index=False)
+    .agg({
+        "Poverty": "mean",
+        "Income": "mean",
+        **{col: "mean" for col in occupation_cols}
+    })
+)
+
+# dominant occupation
+national_avg = filtered_df[occupation_cols].mean()
+
+for col in occupation_cols:
+    state_summary[col + "_diff"] = state_summary[col] - national_avg[col]
+
+diff_cols = [col + "_diff" for col in occupation_cols]
+
+state_summary["Dominant Occupation"] = (
+    state_summary[diff_cols]
+    .idxmax(axis=1)
+    .str.replace("_diff", "", regex=False)
+)
+
+# 简写，避免地图上文字太长
+occ_short = {
+    "Professional": "Prof",
+    "Service": "Serv",
+    "Office": "Off",
+    "Construction": "Const",
+    "Production": "Prod"
+}
+state_summary["Occ Short"] = state_summary["Dominant Occupation"].map(occ_short)
+
+# 州名 -> 缩写
+state_abbrev = {
+    "Alabama": "AL", "Alaska": "AK", "Arizona": "AZ", "Arkansas": "AR",
+    "California": "CA", "Colorado": "CO", "Connecticut": "CT", "Delaware": "DE",
+    "Florida": "FL", "Georgia": "GA", "Hawaii": "HI", "Idaho": "ID",
+    "Illinois": "IL", "Indiana": "IN", "Iowa": "IA", "Kansas": "KS",
+    "Kentucky": "KY", "Louisiana": "LA", "Maine": "ME", "Maryland": "MD",
+    "Massachusetts": "MA", "Michigan": "MI", "Minnesota": "MN", "Mississippi": "MS",
+    "Missouri": "MO", "Montana": "MT", "Nebraska": "NE", "Nevada": "NV",
+    "New Hampshire": "NH", "New Jersey": "NJ", "New Mexico": "NM", "New York": "NY",
+    "North Carolina": "NC", "North Dakota": "ND", "Ohio": "OH", "Oklahoma": "OK",
+    "Oregon": "OR", "Pennsylvania": "PA", "Rhode Island": "RI", "South Carolina": "SC",
+    "South Dakota": "SD", "Tennessee": "TN", "Texas": "TX", "Utah": "UT",
+    "Vermont": "VT", "Virginia": "VA", "Washington": "WA", "West Virginia": "WV",
+    "Wisconsin": "WI", "Wyoming": "WY", "District of Columbia": "DC"
+}
+state_summary["State Code"] = state_summary["State"].map(state_abbrev)
+state_summary = state_summary.dropna(subset=["State Code"])
+
+# 每个州显示的文字
+state_summary["Label"] = state_summary["State Code"] + "<br>" + state_summary["Occ Short"]
+
+# 州中心点（近似值，用来放文字）
+state_centers = {
+    "AL": (32.8, -86.8), "AK": (64.0, -152.0), "AZ": (34.2, -111.7), "AR": (34.8, -92.2),
+    "CA": (37.2, -119.5), "CO": (39.0, -105.5), "CT": (41.6, -72.7), "DE": (39.0, -75.5),
+    "FL": (28.4, -82.4), "GA": (32.7, -83.3), "HI": (20.8, -157.5), "ID": (44.2, -114.0),
+    "IL": (40.0, -89.2), "IN": (40.0, -86.1), "IA": (42.1, -93.5), "KS": (38.5, -98.0),
+    "KY": (37.5, -85.3), "LA": (31.0, -92.0), "ME": (45.3, -69.0), "MD": (39.0, -76.7),
+    "MA": (42.3, -71.8), "MI": (44.3, -85.4), "MN": (46.3, -94.2), "MS": (32.7, -89.7),
+    "MO": (38.5, -92.5), "MT": (46.9, -110.4), "NE": (41.5, -99.7), "NV": (39.3, -116.6),
+    "NH": (43.7, -71.6), "NJ": (40.1, -74.7), "NM": (34.4, -106.1), "NY": (42.9, -75.0),
+    "NC": (35.5, -79.4), "ND": (47.5, -100.5), "OH": (40.4, -82.8), "OK": (35.6, -97.5),
+    "OR": (43.9, -120.6), "PA": (41.0, -77.6), "RI": (41.7, -71.5), "SC": (33.8, -80.9),
+    "SD": (44.4, -100.2), "TN": (35.8, -86.4), "TX": (31.5, -99.3), "UT": (39.3, -111.7),
+    "VT": (44.1, -72.7), "VA": (37.5, -78.7), "WA": (47.4, -120.7), "WV": (38.6, -80.6),
+    "WI": (44.5, -89.5), "WY": (43.0, -107.6), "DC": (38.9, -77.0)
+}
+
+state_summary["lat"] = state_summary["State Code"].map(lambda x: state_centers[x][0])
+state_summary["lon"] = state_summary["State Code"].map(lambda x: state_centers[x][1])
+
+map_left, map_right = st.columns([4, 1.4])
+
+with map_left:
+    fig_map = px.choropleth(
+        state_summary,
+        locations="State Code",
+        locationmode="USA-states",
+        color="Poverty",
+        scope="usa",
+        hover_name="State",
+        hover_data={
+            "State Code": False,
+            "Poverty": ':.1f',
+            "Income": ':,.0f',
+            "Dominant Occupation": True,
+            "Occ Short": False,
+            "lat": False,
+            "lon": False,
+            "Label": False
+        },
+        color_continuous_scale="OrRd",
+        labels={
+            "Poverty": "Avg Poverty Rate (%)",
+            "Income": "Avg Income",
+            "Dominant Occupation": "Dominant Occupation"
+        }
+    )
+
+    # 叠加州缩写 + occupation 简写
+    fig_map.add_scattergeo(
+        locations=state_summary["State Code"],
+        locationmode="USA-states",
+        text=state_summary["Label"],
+        mode="text",
+        textfont=dict(size=9, color="black"),
+        hoverinfo="skip"
+    )
+
+    fig_map.update_layout(
+        template="plotly_white",
+        margin=dict(l=10, r=10, t=20, b=10),
+        height=560,
+        geo=dict(bgcolor="rgba(0,0,0,0)")
+    )
+
+    st.plotly_chart(fig_map, use_container_width=True)
+
+with map_right:
+    st.markdown("### Map Insight")
+
+    if len(state_summary) > 0:
+        top_state = state_summary.sort_values("Poverty", ascending=False).iloc[0]
+        low_state = state_summary.sort_values("Poverty", ascending=True).iloc[0]
+
+        occ_counts = (
+            state_summary["Dominant Occupation"]
+            .value_counts()
+            .reset_index()
+        )
+        occ_counts.columns = ["Occupation", "State Count"]
+
+        st.write(f"States shown: **{len(state_summary)}**")
+        st.write(f"Highest avg poverty: **{top_state['State']} ({top_state['Poverty']:.1f}%)**")
+        st.write(f"Lowest avg poverty: **{low_state['State']} ({low_state['Poverty']:.1f}%)**")
+
+        st.markdown("**Dominant occupation across states:**")
+        for _, row in occ_counts.iterrows():
+            st.write(f"- {row['Occupation']}: **{row['State Count']} states**")
+
+        st.info("Color shows average poverty by state. Text shows state abbreviation and dominant occupation.")
+    else:
+        st.write("No state-level data available for the current selection.")
+
+st.caption("Color indicates average poverty rate. Each state label shows the state abbreviation and dominant occupation.")
+st.markdown("---")
+
 # ===== Section 1: Poverty Distribution =====
 st.subheader(f"Poverty Distribution ({year})")
 
@@ -120,15 +294,14 @@ st.caption("This chart shows how poverty rates are distributed across counties i
 
 
 st.markdown("---")
-
-# ===== Section 2: Top 10 Counties by Poverty =====
-st.subheader(f"Top 10 Counties by Poverty ({year})")
+# ===== Section 2: Top 10 Counties by Child Poverty =====
+st.subheader(f"Top 10 Counties by Child Poverty ({year})")
 
 left2, right2 = st.columns([3, 1])
 
 top_counties = (
-    filtered_df[["County", "State", "Poverty"]]
-    .sort_values("Poverty", ascending=False)
+    filtered_df[["County", "State", "ChildPoverty"]]
+    .sort_values("ChildPoverty", ascending=False)
     .head(10)
     .copy()
 )
@@ -139,15 +312,15 @@ with left2:
     fig2 = px.bar(
         top_counties,
         x="CountyLabel",
-        y="Poverty",
-        color="Poverty",
+        y="ChildPoverty",
+        color="ChildPoverty",
         color_continuous_scale="OrRd"
     )
     fig2.update_layout(
         template="plotly_white",
         margin=dict(l=10, r=10, t=20, b=10),
         xaxis_title="County",
-        yaxis_title="Poverty Rate",
+        yaxis_title="Child Poverty Rate",
         coloraxis_showscale=False
     )
     st.plotly_chart(fig2, use_container_width=True)
@@ -157,85 +330,27 @@ with right2:
 
     if len(top_counties) > 0:
         top1 = top_counties.iloc[0]
-        avg_top10 = top_counties["Poverty"].mean()
-        gap = top1["Poverty"] - avg_poverty
+        avg_top10 = top_counties["ChildPoverty"].mean()
 
-        st.write(f"Highest-poverty county: **{top1['County']}, {top1['State']}**")
-        st.write(f"Top county poverty rate: **{top1['Poverty']:.1f}%**")
+        # 👉 注意这里要用 ChildPoverty 的整体平均
+        overall_avg = filtered_df["ChildPoverty"].mean()
+        gap = top1["ChildPoverty"] - overall_avg
+
+        st.write(f"Highest child-poverty county: **{top1['County']}, {top1['State']}**")
+        st.write(f"Top child poverty rate: **{top1['ChildPoverty']:.1f}%**")
         st.write(f"Average among top 10 counties: **{avg_top10:.1f}%**")
         st.write(f"Gap from overall average: **{gap:.1f} percentage points**")
 
         if gap > 10:
-            st.info("The highest-poverty counties are far above the overall level, suggesting strong inequality across counties.")
+            st.info("Child poverty is highly concentrated in the top counties, indicating strong inequality.")
         else:
-            st.info("The highest-poverty counties are only moderately above the overall level.")
+            st.info("Child poverty levels are moderately higher in top counties.")
     else:
         st.write("No data available for the current selection.")
 
-st.caption("This chart highlights the counties with the highest poverty rates in the selected data.")
+st.caption("This chart highlights counties with the highest child poverty rates.")
 
 
-
-
-# 图3：Income vs Poverty
-st.markdown("---")
-
-st.subheader(f"Income vs Poverty ({year})")
-
-left3, right3 = st.columns([3, 1])
-
-with left3:
-    fig3 = px.scatter(
-        filtered_df,
-        x="Income",
-        y="Poverty",
-        hover_name="County",
-        hover_data=["State"],
-        trendline="ols",   # ⭐ 加趋势线
-        color_discrete_sequence=["#4C78A8"]
-    )
-
-    fig3.update_traces(marker=dict(size=5, opacity=0.5))
-
-    fig3.update_layout(
-        template="plotly_white",
-        margin=dict(l=10, r=10, t=20, b=10),
-        xaxis_title="Income",
-        yaxis_title="Poverty Rate"
-    )
-
-    st.plotly_chart(fig3, use_container_width=True)
-
-
-with right3:
-    import numpy as np
-
-    st.markdown("### Trend Analysis")
-
-    if len(filtered_df) > 0:
-        corr = filtered_df["Income"].corr(filtered_df["Poverty"])
-        avg_income = filtered_df["Income"].mean()
-        avg_poverty = filtered_df["Poverty"].mean()
-
-        st.write(f"Average income: **${avg_income:,.0f}**")
-        st.write(f"Average poverty: **{avg_poverty:.1f}%**")
-        st.write(f"Correlation: **{corr:.2f}**")
-
-        # 自动解释强弱
-        if corr < -0.7:
-            st.success("Strong negative relationship")
-            st.write("Counties with higher income tend to have significantly lower poverty rates.")
-        elif corr < -0.4:
-            st.info("Moderate negative relationship")
-            st.write("Higher income is associated with lower poverty, but with some variation.")
-        else:
-            st.warning("Weak relationship")
-            st.write("Income does not strongly explain poverty in this selection.")
-
-    else:
-        st.write("No data available.")
-
-st.caption("Higher-income counties generally tend to have lower poverty rates.")
 
 
 #选职业
