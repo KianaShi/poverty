@@ -245,8 +245,6 @@ with map_right:
         st.write("No state-level data available for the current selection.")
 
 st.caption("Color indicates average poverty rate. Each state label shows the state abbreviation and dominant occupation.")
-st.markdown("---")
-
 
 
 
@@ -322,6 +320,11 @@ with right4:
 st.caption("The share of this occupational group may be associated with different poverty patterns.")
 
 st.markdown("---")
+
+
+
+st.markdown("---")
+
 # ===== Section 1: Poverty Distribution =====
 st.subheader(f"Poverty Distribution ({year})")
 
