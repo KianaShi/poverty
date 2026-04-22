@@ -425,11 +425,3 @@ with right2:
 st.caption("This chart highlights counties with the highest child poverty rates.")
 
 st.markdown("---")
-
-# 可展开数据表
-with st.expander("Show Sample Data"):
-    st.dataframe(filtered_df[[
-        "Year", "State", "County", "Income", "IncomePerCap", "Poverty",
-        "Professional", "Service", "Office", "Construction", "Production",
-        "Unemployment"
-    ]].head(20))
