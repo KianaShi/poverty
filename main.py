@@ -247,6 +247,81 @@ with map_right:
 st.caption("Color indicates average poverty rate. Each state label shows the state abbreviation and dominant occupation.")
 st.markdown("---")
 
+
+
+
+#选职业
+
+st.markdown("---")
+
+st.subheader("Select Occupation for Analysis")
+
+occupation_col = st.selectbox(
+    "Occupation",
+    ["Professional", "Service", "Office", "Construction", "Production"]
+)
+
+# 图4：Occupation vs Poverty
+st.markdown("---")
+
+st.subheader(f"{occupation_col} vs Poverty ({year})")
+
+left4, right4 = st.columns([3, 1])
+
+# ===== 左边：图 =====
+with left4:
+    fig4 = px.scatter(
+        filtered_df,
+        x=occupation_col,
+        y="Poverty",
+        hover_name="County",
+        hover_data=["State"],
+        trendline="ols",   # ⭐ 加趋势线
+        color_discrete_sequence=["#2A9D8F"]
+    )
+
+    fig4.update_traces(marker=dict(size=5, opacity=0.5))
+
+    fig4.update_layout(
+        template="plotly_white",
+        margin=dict(l=10, r=10, t=20, b=10),
+        xaxis_title=occupation_col,
+        yaxis_title="Poverty Rate"
+    )
+
+    st.plotly_chart(fig4, use_container_width=True)
+
+
+# ===== 右边：分析 =====
+with right4:
+    st.markdown("### Trend Analysis")
+
+    if len(filtered_df) > 0:
+        corr = filtered_df[occupation_col].corr(filtered_df["Poverty"])
+        avg_occ = filtered_df[occupation_col].mean()
+        avg_poverty = filtered_df["Poverty"].mean()
+
+        st.write(f"Average {occupation_col}: **{avg_occ:.1f}%**")
+        st.write(f"Average poverty: **{avg_poverty:.1f}%**")
+        st.write(f"Correlation: **{corr:.2f}**")
+
+        # 自动解释
+        if corr > 0.4:
+            st.warning("Positive relationship")
+            st.write(f"Higher {occupation_col.lower()} share is associated with higher poverty.")
+        elif corr < -0.4:
+            st.success("Negative relationship")
+            st.write(f"Higher {occupation_col.lower()} share is associated with lower poverty.")
+        else:
+            st.info("Weak relationship")
+            st.write(f"{occupation_col} does not strongly explain poverty variation.")
+
+    else:
+        st.write("No data available.")
+
+st.caption("The share of this occupational group may be associated with different poverty patterns.")
+
+st.markdown("---")
 # ===== Section 1: Poverty Distribution =====
 st.subheader(f"Poverty Distribution ({year})")
 
@@ -350,81 +425,6 @@ with right2:
 
 st.caption("This chart highlights counties with the highest child poverty rates.")
 
-
-
-
-#选职业
-
-st.markdown("---")
-
-st.subheader("Select Occupation for Analysis")
-
-occupation_col = st.selectbox(
-    "Occupation",
-    ["Professional", "Service", "Office", "Construction", "Production"]
-)
-
-# 图4：Occupation vs Poverty
-st.markdown("---")
-
-st.subheader(f"{occupation_col} vs Poverty ({year})")
-
-left4, right4 = st.columns([3, 1])
-
-# ===== 左边：图 =====
-with left4:
-    fig4 = px.scatter(
-        filtered_df,
-        x=occupation_col,
-        y="Poverty",
-        hover_name="County",
-        hover_data=["State"],
-        trendline="ols",   # ⭐ 加趋势线
-        color_discrete_sequence=["#2A9D8F"]
-    )
-
-    fig4.update_traces(marker=dict(size=5, opacity=0.5))
-
-    fig4.update_layout(
-        template="plotly_white",
-        margin=dict(l=10, r=10, t=20, b=10),
-        xaxis_title=occupation_col,
-        yaxis_title="Poverty Rate"
-    )
-
-    st.plotly_chart(fig4, use_container_width=True)
-
-
-# ===== 右边：分析 =====
-with right4:
-    st.markdown("### Trend Analysis")
-
-    if len(filtered_df) > 0:
-        corr = filtered_df[occupation_col].corr(filtered_df["Poverty"])
-        avg_occ = filtered_df[occupation_col].mean()
-        avg_poverty = filtered_df["Poverty"].mean()
-
-        st.write(f"Average {occupation_col}: **{avg_occ:.1f}%**")
-        st.write(f"Average poverty: **{avg_poverty:.1f}%**")
-        st.write(f"Correlation: **{corr:.2f}**")
-
-        # 自动解释
-        if corr > 0.4:
-            st.warning("Positive relationship")
-            st.write(f"Higher {occupation_col.lower()} share is associated with higher poverty.")
-        elif corr < -0.4:
-            st.success("Negative relationship")
-            st.write(f"Higher {occupation_col.lower()} share is associated with lower poverty.")
-        else:
-            st.info("Weak relationship")
-            st.write(f"{occupation_col} does not strongly explain poverty variation.")
-
-    else:
-        st.write("No data available.")
-
-st.caption("The share of this occupational group may be associated with different poverty patterns.")
-
-st.markdown("---")
 
 # 可展开数据表
 with st.expander("Show Sample Data"):
