@@ -25,7 +25,7 @@ for col in numeric_cols:
 df = df.dropna(subset=["State", "County", "Income", "Poverty"])
 
 # 标题区
-st.title("U.S. County Poverty and Occupational Structure Dashboard")
+st.title("Industry, Household & Children: A Multi-Perspective Analysis of U.S. Poverty")
 st.markdown(
     "This dashboard compares county-level data from **2015** and **2017** to explore "
     "how occupational structure relates to **poverty** and **income** across U.S. counties."
