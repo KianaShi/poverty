@@ -246,7 +246,52 @@ with map_right:
 
 st.caption("Color indicates average poverty rate. Each state label shows the state abbreviation and dominant occupation.")
 
+st.markdown("---")
 
+# ===== Section 1: Poverty Distribution =====
+st.subheader(f"Poverty Distribution ({year})")
+
+left1, right1 = st.columns([3, 1])
+
+with left1:
+    fig1 = px.histogram(
+        filtered_df,
+        x="Poverty",
+        nbins=20,
+        color_discrete_sequence=["#E45756"]
+    )
+    fig1.update_layout(
+        template="plotly_white",
+        margin=dict(l=10, r=10, t=20, b=10),
+        xaxis_title="Poverty Rate",
+        yaxis_title="Number of Counties"
+    )
+    st.plotly_chart(fig1, use_container_width=True)
+
+with right1:
+    avg_poverty = filtered_df["Poverty"].mean()
+    median_poverty = filtered_df["Poverty"].median()
+    max_poverty = filtered_df["Poverty"].max()
+    min_poverty = filtered_df["Poverty"].min()
+
+    high_poverty_count = (filtered_df["Poverty"] >= 20).sum()
+    high_poverty_pct = high_poverty_count / len(filtered_df) * 100 if len(filtered_df) > 0 else 0
+
+    st.markdown("### Quick Analysis")
+    st.write(f"Average poverty rate: **{avg_poverty:.1f}%**")
+    st.write(f"Median poverty rate: **{median_poverty:.1f}%**")
+    st.write(f"Range: **{min_poverty:.1f}% – {max_poverty:.1f}%**")
+    st.write(f"Counties with poverty ≥ 20%: **{high_poverty_count}**")
+    st.write(f"Share of high-poverty counties: **{high_poverty_pct:.1f}%**")
+
+    if avg_poverty >= 20:
+        st.info("Poverty is relatively high in the current selection.")
+    elif avg_poverty >= 12:
+        st.info("Poverty is moderate in the current selection.")
+    else:
+        st.info("Poverty is relatively low in the current selection.")
+
+st.caption("This chart shows how poverty rates are distributed across counties in the selected data.")
 
 #选职业
 
@@ -321,53 +366,6 @@ st.caption("The share of this occupational group may be associated with differen
 
 st.markdown("---")
 
-# ===== Section 1: Poverty Distribution =====
-st.subheader(f"Poverty Distribution ({year})")
-
-left1, right1 = st.columns([3, 1])
-
-with left1:
-    fig1 = px.histogram(
-        filtered_df,
-        x="Poverty",
-        nbins=20,
-        color_discrete_sequence=["#E45756"]
-    )
-    fig1.update_layout(
-        template="plotly_white",
-        margin=dict(l=10, r=10, t=20, b=10),
-        xaxis_title="Poverty Rate",
-        yaxis_title="Number of Counties"
-    )
-    st.plotly_chart(fig1, use_container_width=True)
-
-with right1:
-    avg_poverty = filtered_df["Poverty"].mean()
-    median_poverty = filtered_df["Poverty"].median()
-    max_poverty = filtered_df["Poverty"].max()
-    min_poverty = filtered_df["Poverty"].min()
-
-    high_poverty_count = (filtered_df["Poverty"] >= 20).sum()
-    high_poverty_pct = high_poverty_count / len(filtered_df) * 100 if len(filtered_df) > 0 else 0
-
-    st.markdown("### Quick Analysis")
-    st.write(f"Average poverty rate: **{avg_poverty:.1f}%**")
-    st.write(f"Median poverty rate: **{median_poverty:.1f}%**")
-    st.write(f"Range: **{min_poverty:.1f}% – {max_poverty:.1f}%**")
-    st.write(f"Counties with poverty ≥ 20%: **{high_poverty_count}**")
-    st.write(f"Share of high-poverty counties: **{high_poverty_pct:.1f}%**")
-
-    if avg_poverty >= 20:
-        st.info("Poverty is relatively high in the current selection.")
-    elif avg_poverty >= 12:
-        st.info("Poverty is moderate in the current selection.")
-    else:
-        st.info("Poverty is relatively low in the current selection.")
-
-st.caption("This chart shows how poverty rates are distributed across counties in the selected data.")
-
-
-st.markdown("---")
 # ===== Section 2: Top 10 Counties by Child Poverty =====
 st.subheader(f"Top 10 Counties by Child Poverty ({year})")
 
