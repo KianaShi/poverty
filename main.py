@@ -370,7 +370,6 @@ st.markdown("---")
 st.subheader(f"Top 10 Counties by Child Poverty ({year})")
 
 left2, right2 = st.columns([3, 1])
-top_counties["Rank"] = range(len(top_counties), 0, -1)
 top_counties = (
     filtered_df[["County", "State", "ChildPoverty"]]
     .sort_values("ChildPoverty", ascending=False)
@@ -378,6 +377,8 @@ top_counties = (
     .copy()
 )
 
+
+top_counties["Rank"] = range(len(top_counties), 0, -1)
 top_counties["CountyLabel"] = top_counties["County"] + ", " + top_counties["State"]
 
 with left2:
