@@ -4,7 +4,7 @@ import plotly.express as px
 
 st.set_page_config(page_title="IE6600 Dashboard", layout="wide")
 
-# 读数据
+# load data
 df_2015 = pd.read_csv("acs2015_county_data.csv")
 df_2017 = pd.read_csv("acs2017_county_data.csv")
 
@@ -24,14 +24,14 @@ for col in numeric_cols:
 
 df = df.dropna(subset=["State", "County", "Income", "Poverty"])
 
-# 标题区
+# title
 st.title("Industry, Household & Children: A Multi-Perspective Analysis of U.S. Poverty")
 st.markdown(
     "This dashboard compares county-level data from **2015** and **2017** to explore "
     "how occupational structure relates to **poverty** and **income** across U.S. counties."
 )
 
-# 顶部筛选区
+# Feature Selection
 f1, f2, f3 = st.columns(3)
 
 with f1:
@@ -51,7 +51,7 @@ with f3:
         (float(df["Poverty"].min()), float(df["Poverty"].max()))
     )
 
-# 过滤
+# filter
 filtered_df = df[df["Year"] == year].copy()
 
 if selected_state != "All":
@@ -90,12 +90,12 @@ state_abbrev = {
 }
 
 
-# ===== State-Level Map =====
+# ===== section 1: State-Level Map =====
 st.subheader(f"State-Level Poverty and Dominant Occupation ({year})")
 
 occupation_cols = ["Professional", "Service", "Office", "Construction", "Production"]
 
-# 州级聚合
+# statesummary
 state_summary = (
     filtered_df.groupby("State", as_index=False)
     .agg({
@@ -119,7 +119,7 @@ state_summary["Dominant Occupation"] = (
     .str.replace("_diff", "", regex=False)
 )
 
-# 简写，避免地图上文字太长
+# Short
 occ_short = {
     "Professional": "Prof",
     "Service": "Serv",
@@ -129,7 +129,7 @@ occ_short = {
 }
 state_summary["Occ Short"] = state_summary["Dominant Occupation"].map(occ_short)
 
-# 州名 -> 缩写
+# abbrev
 state_abbrev = {
     "Alabama": "AL", "Alaska": "AK", "Arizona": "AZ", "Arkansas": "AR",
     "California": "CA", "Colorado": "CO", "Connecticut": "CT", "Delaware": "DE",
@@ -148,10 +148,10 @@ state_abbrev = {
 state_summary["State Code"] = state_summary["State"].map(state_abbrev)
 state_summary = state_summary.dropna(subset=["State Code"])
 
-# 每个州显示的文字
+# show name
 state_summary["Label"] = state_summary["State Code"] + "<br>" + state_summary["Occ Short"]
 
-# 州中心点（近似值，用来放文字）
+# mid point
 state_centers = {
     "AL": (32.8, -86.8), "AK": (64.0, -152.0), "AZ": (34.2, -111.7), "AR": (34.8, -92.2),
     "CA": (37.2, -119.5), "CO": (39.0, -105.5), "CT": (41.6, -72.7), "DE": (39.0, -75.5),
@@ -199,7 +199,7 @@ with map_left:
         }
     )
 
-    # 叠加州缩写 + occupation 简写
+    # add name+occupation
     fig_map.add_scattergeo(
         locations=state_summary["State Code"],
         locationmode="USA-states",
@@ -248,7 +248,7 @@ st.caption("Color indicates average poverty rate. Each state label shows the sta
 
 st.markdown("---")
 
-# ===== Section 1: Poverty Distribution =====
+# ===== Section 2: Poverty Distribution =====
 st.subheader(f"Poverty Distribution ({year})")
 
 left1, right1 = st.columns([3, 1])
@@ -293,7 +293,7 @@ with right1:
 
 st.caption("This chart shows how poverty rates are distributed across counties in the selected data.")
 
-#选职业
+#occupation
 
 st.markdown("---")
 
@@ -303,15 +303,15 @@ occupation_col = st.selectbox(
     "Occupation",
     ["Professional", "Service", "Office", "Construction", "Production"]
 )
-
-# 图4：Occupation vs Poverty
 st.markdown("---")
+
+# ===== Section 3: Poverty vs Occupation =====
 
 st.subheader(f"{occupation_col} vs Poverty ({year})")
 
 left4, right4 = st.columns([3, 1])
 
-# ===== 左边：图 =====
+# ===== left =====
 with left4:
     fig4 = px.scatter(
         filtered_df,
@@ -319,7 +319,7 @@ with left4:
         y="Poverty",
         hover_name="County",
         hover_data=["State"],
-        trendline="ols",   # ⭐ 加趋势线
+        trendline="ols",
         color_discrete_sequence=["#2A9D8F"]
     )
 
@@ -335,7 +335,7 @@ with left4:
     st.plotly_chart(fig4, use_container_width=True)
 
 
-# ===== 右边：分析 =====
+# ===== right =====
 with right4:
     st.markdown("### Trend Analysis")
 
@@ -348,7 +348,7 @@ with right4:
         st.write(f"Average poverty: **{avg_poverty:.1f}%**")
         st.write(f"Correlation: **{corr:.2f}**")
 
-        # 自动解释
+        # auto explain
         if corr > 0.4:
             st.warning("Positive relationship")
             st.write(f"Higher {occupation_col.lower()} share is associated with higher poverty.")
@@ -366,11 +366,11 @@ st.caption("The share of this occupational group may be associated with differen
 
 st.markdown("---")
 
-# ===== Section 2: Top 10 Counties by Child Poverty =====
+# ===== Section 4: Top 10 Counties by Child Poverty =====
 st.subheader(f"Top 10 Counties by Child Poverty ({year})")
 
 left2, right2 = st.columns([3, 1])
-
+top_counties["Rank"] = range(len(top_counties), 0, -1)
 top_counties = (
     filtered_df[["County", "State", "ChildPoverty"]]
     .sort_values("ChildPoverty", ascending=False)
@@ -385,7 +385,7 @@ with left2:
         top_counties,
         x="CountyLabel",
         y="ChildPoverty",
-        color="ChildPoverty",
+        color="Rank",
         color_continuous_scale="OrRd"
     )
     fig2.update_layout(
@@ -404,7 +404,6 @@ with right2:
         top1 = top_counties.iloc[0]
         avg_top10 = top_counties["ChildPoverty"].mean()
 
-        # 👉 注意这里要用 ChildPoverty 的整体平均
         overall_avg = filtered_df["ChildPoverty"].mean()
         gap = top1["ChildPoverty"] - overall_avg
 
